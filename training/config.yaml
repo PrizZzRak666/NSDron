@@ -16,3 +16,19 @@ env:
   max_steps: 2000
   target_radius: 0.5
   max_speed: 1.0
+  mavlink_url: "udp:127.0.0.1:14550"
+  pose_timeout: 0.5
+  action_rate_hz: 10.0
+  auto_guided: true
+  guided_mode_id: 4
+  auto_arm: true
+  arm_timeout: 5.0
+  disarm_on_close: false
+  waypoints:
+    - [2.0, 0.0, -2.0]
+    - [2.0, 2.0, -2.0]
+    - [0.0, 2.0, -2.0]
+    - [0.0, 0.0, -2.0]
+
+train:
+  total_timesteps: 10000
