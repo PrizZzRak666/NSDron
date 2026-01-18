@@ -19,6 +19,11 @@ to ArduPilot SITL via MAVLink.
 python training/train.py --config training/config.yaml
 ```
 
+## Smoke test
+```
+python training/smoke_test.py --mavlink udp:127.0.0.1:14550
+```
+
 ## Notes
 - The environment uses `LOCAL_POSITION_NED` for pose.
 - Observations: local pose, target pose, velocity.
