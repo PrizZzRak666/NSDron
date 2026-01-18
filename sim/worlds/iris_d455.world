@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="iris_d455">
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- ArduPilot Iris vehicle (from ardupilot_gazebo models) -->
+    <include>
+      <uri>model://iris</uri>
+    </include>
+
+    <!-- Standalone camera model for testing topics -->
+    <include>
+      <uri>model://d455_camera</uri>
+      <pose>2 0 1 0 0 0</pose>
+    </include>
+  </world>
+</sdf>
