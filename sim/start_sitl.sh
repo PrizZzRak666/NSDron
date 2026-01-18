@@ -19,4 +19,7 @@ cat <<'CMD'
 
 # Terminal C (MAVLink check):
 # mavproxy.py --master=udp:127.0.0.1:14550
+
+# Terminal D (ROS2 camera topics):
+# /path/to/NSDron/sim/check_camera_topics.sh
 CMD

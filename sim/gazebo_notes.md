@@ -13,3 +13,9 @@ Tips:
 - Add mild noise for sim-to-real robustness.
 - Confirm the camera frame name matches ROS2 nodes.
 - If using depth, expose both RGB and depth topics.
+
+Expected ROS2 topics (may vary with plugin config):
+- `/camera/image_raw`
+- `/camera/camera_info`
+- `/camera/depth/image_raw`
+- `/camera/depth/camera_info`

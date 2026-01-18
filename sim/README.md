@@ -16,6 +16,7 @@ Intel RealSense D455.
 - `INSTALL.md`: step-by-step setup checklist.
 - `models/d455_camera`: basic RGB camera model.
 - `worlds/iris_d455.world`: world file including Iris and camera.
+- `check_camera_topics.sh`: helper to verify RGB/depth topics in ROS2.
 
 ## Notes
 - Keep the camera intrinsics consistent between sim and real.
