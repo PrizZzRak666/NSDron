@@ -15,3 +15,6 @@ ros2 launch nsdron_ros2 nsdron_launch.py
 ## Notes
 - Requires rclpy, geometry_msgs, and pymavlink.
 - Update MAVLink connection in `mavlink_bridge.py` parameters if needed.
+- Safety parameters (mavlink_bridge):
+  - `timeout_sec` deadman timeout (default 0.5s)
+  - `max_speed_xy`, `max_speed_z`, `max_yaw_rate` clamps

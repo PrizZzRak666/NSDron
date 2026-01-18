@@ -9,6 +9,8 @@ Topics:
   - Source: mission_node
 - /control/setpoint: geometry_msgs/TwistStamped
   - Source: control_node
+- /mavlink/status: std_msgs/String
+  - Source: mavlink_bridge
 
 Frames:
 - Use NED or ENU consistently. ArduPilot uses NED.
