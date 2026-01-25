@@ -1,6 +1,6 @@
 # Gazebo camera notes
 
-Goal: approximate Intel RealSense D455.
+Goal: approximate Intel RealSense D455 for gz sim.
 
 Suggested starting parameters:
 - Resolution: 640x480 or 848x480
@@ -14,8 +14,10 @@ Tips:
 - Confirm the camera frame name matches ROS2 nodes.
 - If using depth, expose both RGB and depth topics.
 
-Expected ROS2 topics (may vary with plugin config):
+Expected gz topics:
 - `/camera/image_raw`
-- `/camera/camera_info`
 - `/camera/depth/image_raw`
+
+If bridging to ROS2, also expect:
+- `/camera/camera_info`
 - `/camera/depth/camera_info`
