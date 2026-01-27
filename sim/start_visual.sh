@@ -13,6 +13,9 @@ FUEL_PATH="${FUEL_PATH:-$HOME/.gz/fuel/fuel.gazebosim.org/OpenRobotics/models}"
 GZ_BIN="${GZ_BIN:-/opt/ros/jazzy/opt/gz_tools_vendor/bin/gz}"
 SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9002}"
 SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9003}"
+PREFLIGHT="${PREFLIGHT:-1}"
+PREFLIGHT_ALT="${PREFLIGHT_ALT:-2.0}"
+PREFLIGHT_TIMEOUT="${PREFLIGHT_TIMEOUT:-20}"
 
 mkdir -p "$LOG_DIR"
 
@@ -75,6 +78,17 @@ fi
   --slave 0 \
   --defaults "$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm" \
   --sim-address=127.0.0.1 --sim-port-in "$SITL_SIM_PORT_IN" --sim-port-out "$SITL_SIM_PORT_OUT" -I0 >"$SITL_LOG" 2>&1 &
+
+if [[ "$PREFLIGHT" == "1" ]]; then
+  if [[ ! -x "$VENV_PY" ]]; then
+    echo "[error] Python venv not found: $VENV_PY"
+    exit 1
+  fi
+  "$VENV_PY" "$NSDRON_DIR/sim/preflight_takeoff.py" \
+    --mavlink tcp:127.0.0.1:5760 \
+    --alt "$PREFLIGHT_ALT" \
+    --timeout "$PREFLIGHT_TIMEOUT" || true
+fi
 
 echo "[info] SITL log: $SITL_LOG"
 echo "[info] GZ log: $GZ_LOG"
