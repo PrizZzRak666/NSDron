@@ -7,6 +7,7 @@ ARDUPILOT_GZ_DIR="${ARDUPILOT_GZ_DIR:-$HOME/ardupilot/ardupilot_gazebo}"
 WORLD="${WORLD:-$NSDRON_DIR/sim/worlds/iris_d455.world}"
 VENV_PY="${VENV_PY:-$NSDRON_DIR/.venv/bin/python}"
 LOG_DIR="${LOG_DIR:-$NSDRON_DIR/logs}"
+TRAIN_LOG="${TRAIN_LOG:-$LOG_DIR/train.log}"
 
 mkdir -p "$LOG_DIR"
 
@@ -30,8 +31,18 @@ export GZ_SIM_SYSTEM_PLUGIN_PATH="$ARDUPILOT_GZ_DIR/build"
 gz sim -s -v 4 "$WORLD" >"$GZ_LOG" 2>&1 &
 
 sleep 3
+
+if command -v ss >/dev/null 2>&1; then
+  for _ in {1..20}; do
+    if ss -lnt 2>/dev/null | grep -q ":5760"; then
+      break
+    fi
+    sleep 1
+  done
+fi
 echo "[info] SITL log: $SITL_LOG"
 echo "[info] GZ log: $GZ_LOG"
+echo "[info] Train log: $TRAIN_LOG"
 
 if [[ "${1:-}" == "--no-train" ]]; then
   echo "[info] SITL + Gazebo started. Run training manually."
@@ -43,4 +54,5 @@ if [[ ! -x "$VENV_PY" ]]; then
   exit 1
 fi
 
-"$VENV_PY" "$NSDRON_DIR/training/train.py" --config "$NSDRON_DIR/training/config.yaml"
+"$VENV_PY" "$NSDRON_DIR/training/train.py" --config "$NSDRON_DIR/training/config.yaml" >"$TRAIN_LOG" 2>&1 &
+echo "[info] Training PID: $!"
