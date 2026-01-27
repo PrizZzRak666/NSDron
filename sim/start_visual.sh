@@ -29,13 +29,6 @@ if [[ -z "${GZ_BIN:-}" ]]; then
   exit 1
 fi
 
-"$ARDUPILOT_DIR/build/sitl/bin/arducopter" \
-  --model gazebo-iris \
-  --speedup 1 \
-  --slave 0 \
-  --defaults "$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm" \
-  --sim-address=127.0.0.1 --sim-port-in 9003 --sim-port-out 9002 -I0 >"$SITL_LOG" 2>&1 &
-
 export GZ_SIM_RESOURCE_PATH="$ARDUPILOT_GZ_DIR/models:$NSDRON_DIR/sim/models"
 if [[ -d "$FUEL_PATH" ]]; then
   export GZ_SIM_RESOURCE_PATH="$GZ_SIM_RESOURCE_PATH:$FUEL_PATH"
@@ -56,6 +49,12 @@ if ! "$GZ_BIN" service -l 2>/dev/null | grep -q "/world/${WORLD_NAME}/create"; t
   exit 1
 fi
 
+"$GZ_BIN" service -s "/world/${WORLD_NAME}/control" \
+  --reqtype gz.msgs.WorldControl \
+  --reptype gz.msgs.Boolean \
+  --timeout 3000 \
+  --req 'pause: false' >/dev/null 2>&1 || true
+
 "$GZ_BIN" service -s "/world/${WORLD_NAME}/create" \
   --reqtype gz.msgs.EntityFactory \
   --reptype gz.msgs.Boolean \
@@ -67,6 +66,13 @@ fi
   --reptype gz.msgs.Boolean \
   --timeout 3000 \
   --req 'sdf_filename: "'"$NSDRON_DIR"'/sim/models/d455_camera/model.sdf", name: "d455_camera", pose: {position: {x: 2, z: 1}}' >/dev/null 2>&1 || true
+
+"$ARDUPILOT_DIR/build/sitl/bin/arducopter" \
+  --model gazebo-iris \
+  --speedup 1 \
+  --slave 0 \
+  --defaults "$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm" \
+  --sim-address=127.0.0.1 --sim-port-in 9003 --sim-port-out 9002 -I0 >"$SITL_LOG" 2>&1 &
 
 echo "[info] SITL log: $SITL_LOG"
 echo "[info] GZ log: $GZ_LOG"
