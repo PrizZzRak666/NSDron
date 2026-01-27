@@ -84,6 +84,16 @@ if [[ "$PREFLIGHT" == "1" ]]; then
     echo "[error] Python venv not found: $VENV_PY"
     exit 1
   fi
+  if command -v ss >/dev/null 2>&1; then
+    for _ in {1..30}; do
+      if ss -lnt 2>/dev/null | grep -q ":5760"; then
+        break
+      fi
+      sleep 1
+    done
+  else
+    sleep 5
+  fi
   "$VENV_PY" "$NSDRON_DIR/sim/preflight_takeoff.py" \
     --mavlink tcp:127.0.0.1:5760 \
     --alt "$PREFLIGHT_ALT" \

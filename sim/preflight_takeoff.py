@@ -31,7 +31,13 @@ def main() -> int:
     args = parser.parse_args()
 
     mav = mavutil.mavlink_connection(args.mavlink)
-    hb = mav.wait_heartbeat(timeout=args.timeout)
+    deadline = time.time() + args.timeout
+    hb = None
+    while time.time() < deadline:
+        hb = mav.wait_heartbeat(timeout=min(5.0, args.timeout))
+        if hb is not None:
+            break
+        time.sleep(1.0)
     if hb is None:
         print("[error] No heartbeat")
         return 1
