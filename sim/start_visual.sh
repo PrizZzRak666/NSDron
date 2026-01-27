@@ -102,6 +102,17 @@ if [[ "$PREFLIGHT" == "1" ]]; then
     echo "[error] Python venv not found: $VENV_PY"
     exit 1
   fi
+  # Poke the UDP client so SITL starts emitting MAVLink.
+  "$VENV_PY" - <<'PY' || true
+from pymavlink import mavutil
+m = mavutil.mavlink_connection("udpout:127.0.0.1:14550")
+for _ in range(3):
+    m.mav.heartbeat_send(
+        mavutil.mavlink.MAV_TYPE_GCS,
+        mavutil.mavlink.MAV_AUTOPILOT_INVALID,
+        0, 0, 0
+    )
+PY
   sleep 5
   "$VENV_PY" "$NSDRON_DIR/sim/preflight_takeoff.py" \
     --mavlink "udpin:0.0.0.0:${MAVLINK_UDP_PORT}" \
