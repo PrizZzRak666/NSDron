@@ -78,7 +78,15 @@ class MavlinkClient:
         )
 
     def set_mode_guided(self, guided_mode_id: int) -> None:
-        base_mode = mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED
+        try:
+            self.mav.set_mode("GUIDED")
+            return
+        except Exception:
+            pass
+        base_mode = (
+            mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED
+            | mavutil.mavlink.MAV_MODE_FLAG_GUIDED_ENABLED
+        )
         self.mav.mav.set_mode_send(self.mav.target_system, base_mode, guided_mode_id)
 
     def arm(self, timeout: float = 5.0) -> bool:
@@ -96,6 +104,21 @@ class MavlinkClient:
             0,
         )
         return self._wait_for_arm(True, timeout)
+
+    def takeoff(self, alt: float) -> None:
+        self.mav.mav.command_long_send(
+            self.mav.target_system,
+            self.mav.target_component,
+            mavutil.mavlink.MAV_CMD_NAV_TAKEOFF,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            float(abs(alt)),
+        )
 
     def disarm(self, timeout: float = 5.0) -> bool:
         self.mav.mav.command_long_send(
@@ -237,7 +260,8 @@ class SITLDroneEnv(gym.Env):
         if self.config.auto_guided:
             self.client.set_mode_guided(self.config.guided_mode_id)
         if self.config.auto_arm:
-            self.client.arm(self.config.arm_timeout)
+            if not self.client.arm(self.config.arm_timeout):
+                print("[warn] ARM failed; check SITL prearm conditions")
 
         state = self.client.read_state(self.config.pose_timeout)
         if state is None:
@@ -333,13 +357,14 @@ class SITLDroneEnv(gym.Env):
         target_z = float(home[2] - abs(self.config.takeoff_alt))
         deadline = time.time() + self.config.takeoff_timeout
         step = 1.0 / max(self.config.action_rate_hz, 5.0)
+        self.client.takeoff(self.config.takeoff_alt)
         while time.time() < deadline:
-            self.client.send_velocity(0.0, 0.0, -abs(self.config.takeoff_speed), 0.0)
             state = self.client.read_state(self.config.pose_timeout)
             if state is not None:
                 pos, _ = state
                 if float(pos[2]) <= target_z:
                     break
+            self.client.send_velocity(0.0, 0.0, -abs(self.config.takeoff_speed), 0.0)
             time.sleep(step)
         self.client.send_velocity(0.0, 0.0, 0.0, 0.0)
 
