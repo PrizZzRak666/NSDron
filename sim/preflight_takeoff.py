@@ -25,7 +25,7 @@ def wait_local_position(mav: mavutil.mavfile, timeout: float) -> float | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mavlink", default="udpin:0.0.0.0:14550")
+    parser.add_argument("--mavlink", default="tcp:127.0.0.1:5762")
     parser.add_argument("--alt", type=float, default=2.0)
     parser.add_argument("--timeout", type=float, default=20.0)
     args = parser.parse_args()
