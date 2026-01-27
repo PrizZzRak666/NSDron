@@ -64,8 +64,28 @@ class MavlinkClient:
         if _MAVLINK_ERROR is not None:
             raise RuntimeError(f"Missing dependency: {_MAVLINK_ERROR}")
         self.mav = mavutil.mavlink_connection(url)
-        self.mav.wait_heartbeat(timeout=30)
+        self._wait_heartbeat_with_wakeup(timeout=30.0)
         self.request_streams(stream_rate_hz)
+
+    def _wait_heartbeat_with_wakeup(self, timeout: float) -> None:
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            # Send a GCS heartbeat to wake the link if needed.
+            try:
+                self.mav.mav.heartbeat_send(
+                    mavutil.mavlink.MAV_TYPE_GCS,
+                    mavutil.mavlink.MAV_AUTOPILOT_INVALID,
+                    0,
+                    0,
+                    0,
+                )
+            except Exception:
+                pass
+            hb = self.mav.wait_heartbeat(timeout=2.0)
+            if hb is not None:
+                return
+            time.sleep(1.0)
+        raise TimeoutError("No MAVLink heartbeat received")
 
     def request_streams(self, rate_hz: float) -> None:
         rate = max(int(rate_hz), 1)

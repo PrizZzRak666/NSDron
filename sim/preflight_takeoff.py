@@ -34,7 +34,17 @@ def main() -> int:
     deadline = time.time() + args.timeout
     hb = None
     while time.time() < deadline:
-        hb = mav.wait_heartbeat(timeout=min(5.0, args.timeout))
+        try:
+            mav.mav.heartbeat_send(
+                mavutil.mavlink.MAV_TYPE_GCS,
+                mavutil.mavlink.MAV_AUTOPILOT_INVALID,
+                0,
+                0,
+                0,
+            )
+        except Exception:
+            pass
+        hb = mav.wait_heartbeat(timeout=2.0)
         if hb is not None:
             break
         time.sleep(1.0)
