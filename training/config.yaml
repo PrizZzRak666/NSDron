@@ -22,6 +22,10 @@ env:
   auto_guided: true
   guided_mode_id: 4
   auto_arm: true
+  auto_takeoff: true
+  takeoff_alt: 1.5
+  takeoff_timeout: 8.0
+  takeoff_speed: 0.8
   arm_timeout: 5.0
   disarm_on_close: false
   log_trajectory: true

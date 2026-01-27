@@ -38,6 +38,10 @@ class EnvConfig:
     auto_guided: bool = True
     guided_mode_id: int = 4
     auto_arm: bool = True
+    auto_takeoff: bool = False
+    takeoff_alt: float = 1.5
+    takeoff_timeout: float = 8.0
+    takeoff_speed: float = 0.8
     arm_timeout: float = 5.0
     disarm_on_close: bool = False
     log_trajectory: bool = False
@@ -242,6 +246,11 @@ class SITLDroneEnv(gym.Env):
 
         pos, vel = state
         self.home = pos.copy()
+        if self.config.auto_takeoff:
+            self._takeoff(self.home)
+            state = self.client.read_state(self.config.pose_timeout)
+            if state is not None:
+                pos, vel = state
         self.targets = self._build_targets(self.home)
         target = self.targets[0]
         obs = self._build_obs(pos, vel, target)
@@ -319,6 +328,20 @@ class SITLDroneEnv(gym.Env):
             offset = np.array(wp, dtype=np.float32)
             targets.append(home + offset)
         return targets
+
+    def _takeoff(self, home: np.ndarray) -> None:
+        target_z = float(home[2] - abs(self.config.takeoff_alt))
+        deadline = time.time() + self.config.takeoff_timeout
+        step = 1.0 / max(self.config.action_rate_hz, 5.0)
+        while time.time() < deadline:
+            self.client.send_velocity(0.0, 0.0, -abs(self.config.takeoff_speed), 0.0)
+            state = self.client.read_state(self.config.pose_timeout)
+            if state is not None:
+                pos, _ = state
+                if float(pos[2]) <= target_z:
+                    break
+            time.sleep(step)
+        self.client.send_velocity(0.0, 0.0, 0.0, 0.0)
 
     def _build_obs(self, pos: np.ndarray, vel: np.ndarray, target: np.ndarray) -> np.ndarray:
         return np.concatenate([pos, vel, target]).astype(np.float32)
