@@ -32,7 +32,7 @@ class EnvConfig:
     max_steps: int = 2000
     target_radius: float = 0.5
     max_speed: float = 1.0
-    mavlink_url: str = "tcp:127.0.0.1:5760"
+    mavlink_url: str = "udpin:0.0.0.0:14550"
     pose_timeout: float = 0.5
     action_rate_hz: float = 10.0
     auto_guided: bool = True
