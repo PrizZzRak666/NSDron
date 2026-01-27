@@ -13,8 +13,6 @@ FUEL_PATH="${FUEL_PATH:-$HOME/.gz/fuel/fuel.gazebosim.org/OpenRobotics/models}"
 GZ_BIN="${GZ_BIN:-/opt/ros/jazzy/opt/gz_tools_vendor/bin/gz}"
 SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9003}"
 SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9002}"
-MAVLINK_UDP_PORT="${MAVLINK_UDP_PORT:-14550}"
-SERIAL0_URL="${SERIAL0_URL:-udpclient:127.0.0.1:${MAVLINK_UDP_PORT}}"
 SITL_WIPE="${SITL_WIPE:-1}"
 PREFLIGHT="${PREFLIGHT:-1}"
 PREFLIGHT_ALT="${PREFLIGHT_ALT:-2.0}"
@@ -79,9 +77,6 @@ fi
   --req 'sdf_filename: "'"$NSDRON_DIR"'/sim/models/d455_camera/model.sdf", name: "d455_camera", pose: {position: {x: 2, z: 1}}' >/dev/null 2>&1 || true
 
 DEFAULTS="$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm"
-if [[ -f "$NSDRON_DIR/sim/serial0_udp.parm" ]]; then
-  DEFAULTS="$DEFAULTS,$NSDRON_DIR/sim/serial0_udp.parm"
-fi
 
 SITL_WIPE_FLAG=""
 if [[ "$SITL_WIPE" == "1" ]]; then
@@ -94,7 +89,6 @@ fi
   --slave 0 \
   --defaults "$DEFAULTS" \
   --sim-address=127.0.0.1 --sim-port-in "$SITL_SIM_PORT_IN" --sim-port-out "$SITL_SIM_PORT_OUT" \
-  --serial0 "$SERIAL0_URL" \
   $SITL_WIPE_FLAG -I0 >"$SITL_LOG" 2>&1 &
 
 if [[ "$PREFLIGHT" == "1" ]]; then
@@ -102,20 +96,18 @@ if [[ "$PREFLIGHT" == "1" ]]; then
     echo "[error] Python venv not found: $VENV_PY"
     exit 1
   fi
-  # Poke the UDP client so SITL starts emitting MAVLink.
-  "$VENV_PY" - <<'PY' || true
-from pymavlink import mavutil
-m = mavutil.mavlink_connection("udpout:127.0.0.1:14550")
-for _ in range(3):
-    m.mav.heartbeat_send(
-        mavutil.mavlink.MAV_TYPE_GCS,
-        mavutil.mavlink.MAV_AUTOPILOT_INVALID,
-        0, 0, 0
-    )
-PY
-  sleep 5
+  if command -v ss >/dev/null 2>&1; then
+    for _ in {1..30}; do
+      if ss -lnt 2>/dev/null | grep -q ":5760"; then
+        break
+      fi
+      sleep 1
+    done
+  else
+    sleep 5
+  fi
   "$VENV_PY" "$NSDRON_DIR/sim/preflight_takeoff.py" \
-    --mavlink "udpin:0.0.0.0:${MAVLINK_UDP_PORT}" \
+    --mavlink "tcp:127.0.0.1:5760" \
     --alt "$PREFLIGHT_ALT" \
     --timeout "$PREFLIGHT_TIMEOUT" || true
 fi

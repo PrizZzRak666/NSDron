@@ -16,7 +16,7 @@ env:
   max_steps: 2000
   target_radius: 0.5
   max_speed: 1.0
-  mavlink_url: "udpin:0.0.0.0:14550"
+  mavlink_url: "tcp:127.0.0.1:5760"
   pose_timeout: 0.5
   action_rate_hz: 10.0
   auto_guided: true
