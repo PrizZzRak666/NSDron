@@ -11,6 +11,8 @@ LOG_DIR="${LOG_DIR:-$NSDRON_DIR/logs}"
 TRAIN_LOG="${TRAIN_LOG:-$LOG_DIR/train.log}"
 FUEL_PATH="${FUEL_PATH:-$HOME/.gz/fuel/fuel.gazebosim.org/OpenRobotics/models}"
 GZ_BIN="${GZ_BIN:-/opt/ros/jazzy/opt/gz_tools_vendor/bin/gz}"
+SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9002}"
+SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9003}"
 
 mkdir -p "$LOG_DIR"
 
@@ -72,7 +74,7 @@ fi
   --speedup 1 \
   --slave 0 \
   --defaults "$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm" \
-  --sim-address=127.0.0.1 --sim-port-in 9003 --sim-port-out 9002 -I0 >"$SITL_LOG" 2>&1 &
+  --sim-address=127.0.0.1 --sim-port-in "$SITL_SIM_PORT_IN" --sim-port-out "$SITL_SIM_PORT_OUT" -I0 >"$SITL_LOG" 2>&1 &
 
 echo "[info] SITL log: $SITL_LOG"
 echo "[info] GZ log: $GZ_LOG"
