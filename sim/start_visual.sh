@@ -11,8 +11,10 @@ LOG_DIR="${LOG_DIR:-$NSDRON_DIR/logs}"
 TRAIN_LOG="${TRAIN_LOG:-$LOG_DIR/train.log}"
 FUEL_PATH="${FUEL_PATH:-$HOME/.gz/fuel/fuel.gazebosim.org/OpenRobotics/models}"
 GZ_BIN="${GZ_BIN:-/opt/ros/jazzy/opt/gz_tools_vendor/bin/gz}"
-SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9002}"
-SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9003}"
+SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9003}"
+SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9002}"
+MAVLINK_UDP_PORT="${MAVLINK_UDP_PORT:-14550}"
+SERIAL0_URL="${SERIAL0_URL:-udpclient:127.0.0.1:${MAVLINK_UDP_PORT}}"
 PREFLIGHT="${PREFLIGHT:-1}"
 PREFLIGHT_ALT="${PREFLIGHT_ALT:-2.0}"
 PREFLIGHT_TIMEOUT="${PREFLIGHT_TIMEOUT:-20}"
@@ -39,6 +41,9 @@ if [[ -d "$FUEL_PATH" ]]; then
   export GZ_SIM_RESOURCE_PATH="$GZ_SIM_RESOURCE_PATH:$FUEL_PATH"
 fi
 export GZ_SIM_SYSTEM_PLUGIN_PATH="$ARDUPILOT_GZ_DIR/build"
+if [[ -f "$NSDRON_DIR/sim/gui_view.config" ]]; then
+  export GZ_GUI_CONFIG_FILE="$NSDRON_DIR/sim/gui_view.config"
+fi
 
 "$GZ_BIN" sim -v 4 -r "$EMPTY_WORLD" --force-version 8 >"$GZ_LOG" 2>&1 &
 
@@ -77,25 +82,17 @@ fi
   --speedup 1 \
   --slave 0 \
   --defaults "$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm" \
-  --sim-address=127.0.0.1 --sim-port-in "$SITL_SIM_PORT_IN" --sim-port-out "$SITL_SIM_PORT_OUT" -I0 >"$SITL_LOG" 2>&1 &
+  --sim-address=127.0.0.1 --sim-port-in "$SITL_SIM_PORT_IN" --sim-port-out "$SITL_SIM_PORT_OUT" \
+  --serial0 "$SERIAL0_URL" -I0 >"$SITL_LOG" 2>&1 &
 
 if [[ "$PREFLIGHT" == "1" ]]; then
   if [[ ! -x "$VENV_PY" ]]; then
     echo "[error] Python venv not found: $VENV_PY"
     exit 1
   fi
-  if command -v ss >/dev/null 2>&1; then
-    for _ in {1..30}; do
-      if ss -lnt 2>/dev/null | grep -q ":5760"; then
-        break
-      fi
-      sleep 1
-    done
-  else
-    sleep 5
-  fi
+  sleep 5
   "$VENV_PY" "$NSDRON_DIR/sim/preflight_takeoff.py" \
-    --mavlink tcp:127.0.0.1:5760 \
+    --mavlink "udpin:0.0.0.0:${MAVLINK_UDP_PORT}" \
     --alt "$PREFLIGHT_ALT" \
     --timeout "$PREFLIGHT_TIMEOUT" || true
 fi
