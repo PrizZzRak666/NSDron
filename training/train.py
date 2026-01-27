@@ -50,6 +50,26 @@ def main() -> int:
     log_dir = base_log_dir / f"run_{run_id}"
     log_dir.mkdir(parents=True, exist_ok=True)
 
+    # Maintain a "latest" pointer for easy access.
+    latest_dir = base_log_dir / "latest"
+    if latest_dir.is_symlink() or latest_dir.exists():
+        if latest_dir.is_symlink() or latest_dir.is_dir():
+            try:
+                latest_dir.unlink()
+            except Exception:
+                pass
+        else:
+            try:
+                latest_dir.unlink()
+            except Exception:
+                pass
+    try:
+        latest_dir.symlink_to(log_dir, target_is_directory=True)
+    except Exception:
+        # Fallback: ensure latest dir exists and write a marker file
+        latest_dir.mkdir(parents=True, exist_ok=True)
+        (latest_dir / "RUN_PATH.txt").write_text(str(log_dir))
+
     env_cfg.log_dir = str(log_dir)
     env = SITLDroneEnv(env_cfg)
     env = Monitor(env, str(log_dir / "monitor"))
@@ -76,6 +96,10 @@ def main() -> int:
 
     model.save(log_dir / "ppo_sitl")
     print(f"[info] Saved model to {log_dir / 'ppo_sitl.zip'}")
+    if latest_dir.is_symlink():
+        print(f"[info] Latest run symlink: {latest_dir}")
+    else:
+        print(f"[info] Latest run marker: {latest_dir / 'RUN_PATH.txt'}")
 
     return 0
 
