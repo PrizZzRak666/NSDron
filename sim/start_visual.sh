@@ -14,6 +14,7 @@ GZ_BIN="${GZ_BIN:-/opt/ros/jazzy/opt/gz_tools_vendor/bin/gz}"
 SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9002}"
 SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9003}"
 MAVLINK_TCP_PORT="${MAVLINK_TCP_PORT:-5762}"
+SERIAL1_URL="${SERIAL1_URL:-tcp:0.0.0.0:${MAVLINK_TCP_PORT}}"
 SITL_WIPE="${SITL_WIPE:-1}"
 PREFLIGHT="${PREFLIGHT:-1}"
 PREFLIGHT_ALT="${PREFLIGHT_ALT:-2.0}"
@@ -78,6 +79,9 @@ fi
   --req 'sdf_filename: "'"$NSDRON_DIR"'/sim/models/d455_camera/model.sdf", name: "d455_camera", pose: {position: {x: 2, z: 1}}' >/dev/null 2>&1 || true
 
 DEFAULTS="$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm"
+if [[ -f "$NSDRON_DIR/sim/serial1_mavlink.parm" ]]; then
+  DEFAULTS="$DEFAULTS,$NSDRON_DIR/sim/serial1_mavlink.parm"
+fi
 
 MODEL_SDF="$ARDUPILOT_GZ_DIR/models/iris_with_ardupilot/model.sdf"
 if [[ -f "$MODEL_SDF" ]]; then
@@ -102,6 +106,7 @@ fi
   --slave 0 \
   --defaults "$DEFAULTS" \
   --sim-address=127.0.0.1 --sim-port-in "$SITL_SIM_PORT_IN" --sim-port-out "$SITL_SIM_PORT_OUT" \
+  --serial1 "$SERIAL1_URL" \
   $SITL_WIPE_FLAG -I0 >"$SITL_LOG" 2>&1 &
 
 if [[ "$PREFLIGHT" == "1" ]]; then
