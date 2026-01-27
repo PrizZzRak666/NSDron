@@ -14,7 +14,8 @@ GZ_BIN="${GZ_BIN:-/opt/ros/jazzy/opt/gz_tools_vendor/bin/gz}"
 SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9003}"
 SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9002}"
 MAVLINK_UDP_PORT="${MAVLINK_UDP_PORT:-14550}"
-SERIAL0_URL="${SERIAL0_URL:-udpclient:127.0.0.1:${MAVLINK_UDP_PORT}}"
+SERIAL1_URL="${SERIAL1_URL:-udpclient:127.0.0.1:${MAVLINK_UDP_PORT}}"
+SITL_WIPE="${SITL_WIPE:-1}"
 PREFLIGHT="${PREFLIGHT:-1}"
 PREFLIGHT_ALT="${PREFLIGHT_ALT:-2.0}"
 PREFLIGHT_TIMEOUT="${PREFLIGHT_TIMEOUT:-20}"
@@ -77,13 +78,24 @@ fi
   --timeout 3000 \
   --req 'sdf_filename: "'"$NSDRON_DIR"'/sim/models/d455_camera/model.sdf", name: "d455_camera", pose: {position: {x: 2, z: 1}}' >/dev/null 2>&1 || true
 
+DEFAULTS="$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm"
+if [[ -f "$NSDRON_DIR/sim/serial1_udp.parm" ]]; then
+  DEFAULTS="$DEFAULTS,$NSDRON_DIR/sim/serial1_udp.parm"
+fi
+
+SITL_WIPE_FLAG=""
+if [[ "$SITL_WIPE" == "1" ]]; then
+  SITL_WIPE_FLAG="--wipe"
+fi
+
 "$ARDUPILOT_DIR/build/sitl/bin/arducopter" \
   --model gazebo-iris \
   --speedup 1 \
   --slave 0 \
-  --defaults "$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm" \
+  --defaults "$DEFAULTS" \
   --sim-address=127.0.0.1 --sim-port-in "$SITL_SIM_PORT_IN" --sim-port-out "$SITL_SIM_PORT_OUT" \
-  --serial0 "$SERIAL0_URL" -I0 >"$SITL_LOG" 2>&1 &
+  --serial1 "$SERIAL1_URL" \
+  $SITL_WIPE_FLAG -I0 >"$SITL_LOG" 2>&1 &
 
 if [[ "$PREFLIGHT" == "1" ]]; then
   if [[ ! -x "$VENV_PY" ]]; then
