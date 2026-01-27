@@ -77,6 +77,9 @@ fi
   --req 'sdf_filename: "'"$NSDRON_DIR"'/sim/models/d455_camera/model.sdf", name: "d455_camera", pose: {position: {x: 2, z: 1}}' >/dev/null 2>&1 || true
 
 DEFAULTS="$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm"
+if [[ -f "$NSDRON_DIR/sim/serial0_mavlink.parm" ]]; then
+  DEFAULTS="$DEFAULTS,$NSDRON_DIR/sim/serial0_mavlink.parm"
+fi
 
 SITL_WIPE_FLAG=""
 if [[ "$SITL_WIPE" == "1" ]]; then
