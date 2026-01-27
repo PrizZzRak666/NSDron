@@ -16,7 +16,7 @@ env:
   max_steps: 2000
   target_radius: 0.5
   max_speed: 1.0
-  mavlink_url: "udp:127.0.0.1:14550"
+  mavlink_url: "tcp:127.0.0.1:5760"
   pose_timeout: 0.5
   action_rate_hz: 10.0
   auto_guided: true
@@ -24,6 +24,8 @@ env:
   auto_arm: true
   arm_timeout: 5.0
   disarm_on_close: false
+  log_trajectory: true
+  log_flush_every: 50
   waypoints:
     - [2.0, 0.0, -2.0]
     - [2.0, 2.0, -2.0]
@@ -32,3 +34,6 @@ env:
 
 train:
   total_timesteps: 10000
+  device: "cpu"
+  log_dir: "training/logs"
+  save_freq: 2000

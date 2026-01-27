@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import csv
+import math
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
@@ -38,6 +40,9 @@ class EnvConfig:
     auto_arm: bool = True
     arm_timeout: float = 5.0
     disarm_on_close: bool = False
+    log_trajectory: bool = False
+    log_dir: Optional[str] = None
+    log_flush_every: int = 50
     waypoints: List[List[float]] = field(
         default_factory=lambda: [
             [2.0, 0.0, -2.0],
@@ -170,6 +175,9 @@ class SITLDroneEnv(gym.Env):
         self.targets: List[np.ndarray] = []
         self.target_index = 0
         self.last_step_time = 0.0
+        self.episode_id = 0
+        self._traj_fp = None
+        self._traj_writer = None
 
         obs_high = np.array([100, 100, 100, 10, 10, 10, 100, 100, 100], dtype=np.float32)
         act_high = np.array([self.config.max_speed] * 3 + [1.0], dtype=np.float32)
@@ -178,11 +186,45 @@ class SITLDroneEnv(gym.Env):
 
         self.client = MavlinkClient(self.config.mavlink_url, self.config.action_rate_hz)
 
+        if self.config.log_trajectory and self.config.log_dir:
+            from pathlib import Path
+
+            log_dir = Path(self.config.log_dir)
+            log_dir.mkdir(parents=True, exist_ok=True)
+            path = log_dir / "trajectory.csv"
+            self._traj_fp = path.open("w", newline="")
+            self._traj_writer = csv.writer(self._traj_fp)
+            self._traj_writer.writerow(
+                [
+                    "time",
+                    "episode",
+                    "step",
+                    "reward",
+                    "terminated",
+                    "truncated",
+                    "pose_valid",
+                    "pos_x",
+                    "pos_y",
+                    "pos_z",
+                    "vel_x",
+                    "vel_y",
+                    "vel_z",
+                    "target_x",
+                    "target_y",
+                    "target_z",
+                    "act_vx",
+                    "act_vy",
+                    "act_vz",
+                    "act_yaw_rate",
+                ]
+            )
+
     def reset(
         self, *, seed: int | None = None, options: Dict[str, Any] | None = None
     ) -> Tuple[Any, Dict[str, Any]]:
         super().reset(seed=seed)
         self.step_count = 0
+        self.episode_id += 1
         self.target_index = 0
         self.home = None
         self.targets = []
@@ -216,6 +258,16 @@ class SITLDroneEnv(gym.Env):
         state = self.client.read_state(self.config.pose_timeout)
         if state is None or not self.targets:
             obs = np.zeros(self.observation_space.shape, dtype=np.float32)
+            self._log_step(
+                reward=-1.0,
+                terminated=False,
+                truncated=True,
+                pose_valid=False,
+                pos=None,
+                vel=None,
+                target=None,
+                action=action,
+            )
             return obs, -1.0, False, True, {"pose_valid": False}
 
         pos, vel = state
@@ -235,6 +287,16 @@ class SITLDroneEnv(gym.Env):
 
         obs = self._build_obs(pos, vel, target)
         truncated = self.step_count >= self.config.max_steps
+        self._log_step(
+            reward=reward,
+            terminated=terminated,
+            truncated=truncated,
+            pose_valid=True,
+            pos=pos,
+            vel=vel,
+            target=target,
+            action=action,
+        )
         return obs, reward, terminated, truncated, {"pose_valid": True, "distance": dist}
 
     def close(self) -> None:
@@ -244,6 +306,12 @@ class SITLDroneEnv(gym.Env):
                 self.client.disarm(self.config.arm_timeout)
         except Exception:
             pass
+        if self._traj_fp:
+            try:
+                self._traj_fp.flush()
+                self._traj_fp.close()
+            except Exception:
+                pass
 
     def _build_targets(self, home: np.ndarray) -> List[np.ndarray]:
         targets = []
@@ -264,3 +332,54 @@ class SITLDroneEnv(gym.Env):
         if elapsed < interval:
             time.sleep(interval - elapsed)
         self.last_step_time = time.time()
+
+    def _log_step(
+        self,
+        *,
+        reward: float,
+        terminated: bool,
+        truncated: bool,
+        pose_valid: bool,
+        pos: Optional[np.ndarray],
+        vel: Optional[np.ndarray],
+        target: Optional[np.ndarray],
+        action: np.ndarray,
+    ) -> None:
+        if not self._traj_writer:
+            return
+        now = time.time()
+        if pos is None:
+            pos_vals = [math.nan, math.nan, math.nan]
+        else:
+            pos_vals = [float(pos[0]), float(pos[1]), float(pos[2])]
+        if vel is None:
+            vel_vals = [math.nan, math.nan, math.nan]
+        else:
+            vel_vals = [float(vel[0]), float(vel[1]), float(vel[2])]
+        if target is None:
+            target_vals = [math.nan, math.nan, math.nan]
+        else:
+            target_vals = [float(target[0]), float(target[1]), float(target[2])]
+        self._traj_writer.writerow(
+            [
+                now,
+                self.episode_id,
+                self.step_count,
+                float(reward),
+                int(terminated),
+                int(truncated),
+                int(pose_valid),
+                *pos_vals,
+                *vel_vals,
+                *target_vals,
+                float(action[0]),
+                float(action[1]),
+                float(action[2]),
+                float(action[3]) if action.shape[0] > 3 else 0.0,
+            ]
+        )
+        if self.config.log_flush_every > 0 and self.step_count % self.config.log_flush_every == 0:
+            try:
+                self._traj_fp.flush()
+            except Exception:
+                pass

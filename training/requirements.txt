@@ -1,3 +1,5 @@
 gymnasium
 stable-baselines3
+pymavlink
 pyyaml
+tensorboard

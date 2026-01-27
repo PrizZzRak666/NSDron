@@ -19,9 +19,33 @@ to ArduPilot SITL via MAVLink.
 python training/train.py --config training/config.yaml
 ```
 
+### Useful overrides
+```
+python training/train.py --config training/config.yaml --device cpu
+python training/train.py --config training/config.yaml --mavlink tcp:127.0.0.1:5760
+python training/train.py --config training/config.yaml --total-timesteps 2000
+python training/train.py --config training/config.yaml --log-dir training/logs
+```
+
+Logs and checkpoints are written to `training/logs/run_YYYYMMDD_HHMMSS/`.
+
+### Trajectory CSV
+If `env.log_trajectory: true`, a per-step CSV is saved to:
+`training/logs/run_YYYYMMDD_HHMMSS/trajectory.csv`
+
+### MAVLink logger (pose/attitude/servo)
+```
+python training/log_mavlink.py --mavlink tcp:127.0.0.1:5760 --out training/logs/mavlink.csv
+```
+
+### Plot logs
+```
+python training/plot_logs.py --log-dir training/logs/run_YYYYMMDD_HHMMSS
+```
+
 ## Smoke test
 ```
-python training/smoke_test.py --mavlink udp:127.0.0.1:14550
+python training/smoke_test.py --mavlink tcp:127.0.0.1:5760
 ```
 
 ## Notes

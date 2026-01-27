@@ -31,6 +31,14 @@ def main() -> int:
         return 1
     print("Heartbeat ok.")
 
+    mav.mav.request_data_stream_send(
+        mav.target_system,
+        mav.target_component,
+        mavutil.mavlink.MAV_DATA_STREAM_POSITION,
+        10,
+        1,
+    )
+
     msg = mav.recv_match(type=["LOCAL_POSITION_NED", "ODOMETRY"], blocking=True, timeout=args.timeout)
     if msg is None:
         print("No pose received.")
