@@ -11,8 +11,8 @@ LOG_DIR="${LOG_DIR:-$NSDRON_DIR/logs}"
 TRAIN_LOG="${TRAIN_LOG:-$LOG_DIR/train.log}"
 FUEL_PATH="${FUEL_PATH:-$HOME/.gz/fuel/fuel.gazebosim.org/OpenRobotics/models}"
 GZ_BIN="${GZ_BIN:-/opt/ros/jazzy/opt/gz_tools_vendor/bin/gz}"
-SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9003}"
-SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9002}"
+SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9002}"
+SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9003}"
 SITL_WIPE="${SITL_WIPE:-1}"
 PREFLIGHT="${PREFLIGHT:-1}"
 PREFLIGHT_ALT="${PREFLIGHT_ALT:-2.0}"
@@ -79,6 +79,18 @@ fi
 DEFAULTS="$ARDUPILOT_DIR/Tools/autotest/default_params/copter.parm,$ARDUPILOT_DIR/Tools/autotest/default_params/gazebo-iris.parm"
 if [[ -f "$NSDRON_DIR/sim/serial0_mavlink.parm" ]]; then
   DEFAULTS="$DEFAULTS,$NSDRON_DIR/sim/serial0_mavlink.parm"
+fi
+
+MODEL_SDF="$ARDUPILOT_GZ_DIR/models/iris_with_ardupilot/model.sdf"
+if [[ -f "$MODEL_SDF" ]]; then
+  FDM_IN=$(grep -oP '<fdm_port_in>\K[0-9]+' "$MODEL_SDF" | head -n1 || true)
+  FDM_OUT=$(grep -oP '<fdm_port_out>\K[0-9]+' "$MODEL_SDF" | head -n1 || true)
+  if [[ -n "${FDM_IN:-}" ]]; then
+    SITL_SIM_PORT_IN="$FDM_IN"
+  fi
+  if [[ -n "${FDM_OUT:-}" ]]; then
+    SITL_SIM_PORT_OUT="$FDM_OUT"
+  fi
 fi
 
 SITL_WIPE_FLAG=""
