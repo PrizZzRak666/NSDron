@@ -45,6 +45,16 @@ make -j$(nproc)
 See `start_sitl.sh` for example commands.
 
 ## 5) Verify MAVLink
+ArduPilot SITL default serial mapping:
+- SERIAL0 (console): tcp:5760
+- SERIAL1 (MAVLink): tcp:5762
+
+Default MAVLink check (TCP):
+```
+mavproxy.py --master=tcp:127.0.0.1:5762
+```
+
+Optional UDP check (only if SITL started with `--serial1 udpclient:127.0.0.1:14550`):
 ```
 mavproxy.py --master=udp:127.0.0.1:14550
 ```

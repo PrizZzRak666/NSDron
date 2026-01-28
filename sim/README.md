@@ -16,6 +16,10 @@ Intel RealSense D455.
 Stops any running SITL/Gazebo, starts both, then launches training.
 Use `./sim/start_all.sh --no-train` to start only SITL + Gazebo.
 
+MAVLink (ArduPilot SITL default):
+- SERIAL0 (console): tcp:5760
+- SERIAL1 (MAVLink): tcp:5762
+
 Stop everything:
 ```
 ./sim/stop_all.sh

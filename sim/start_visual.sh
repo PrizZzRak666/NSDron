@@ -87,11 +87,12 @@ MODEL_SDF="$ARDUPILOT_GZ_DIR/models/iris_with_ardupilot/model.sdf"
 if [[ -f "$MODEL_SDF" ]]; then
   FDM_IN=$(grep -oP '<fdm_port_in>\K[0-9]+' "$MODEL_SDF" | head -n1 || true)
   FDM_OUT=$(grep -oP '<fdm_port_out>\K[0-9]+' "$MODEL_SDF" | head -n1 || true)
+  # SITL sim-port-out must match plugin fdm_port_in, and sim-port-in must match fdm_port_out.
   if [[ -n "${FDM_IN:-}" ]]; then
-    SITL_SIM_PORT_IN="$FDM_IN"
+    SITL_SIM_PORT_OUT="$FDM_IN"
   fi
   if [[ -n "${FDM_OUT:-}" ]]; then
-    SITL_SIM_PORT_OUT="$FDM_OUT"
+    SITL_SIM_PORT_IN="$FDM_OUT"
   fi
 fi
 
