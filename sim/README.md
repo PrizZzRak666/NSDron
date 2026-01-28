@@ -20,6 +20,13 @@ MAVLink (ArduPilot SITL default):
 - SERIAL0 (console): tcp:5760
 - SERIAL1 (MAVLink): tcp:5762
 
+Note: `start_all.sh` and `start_visual.sh` override SERIAL0 to a UDP sink
+by default to avoid blocking on the console connection. To use the console,
+run with:
+```
+SERIAL0_URL=tcp:0.0.0.0:5760 ./sim/start_visual.sh
+```
+
 Stop everything:
 ```
 ./sim/stop_all.sh

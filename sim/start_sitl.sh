@@ -28,6 +28,10 @@ cat <<'CMD'
 # then:
 # mavproxy.py --master=udp:127.0.0.1:14550
 #
+# Note: if you launch arducopter directly, SERIAL0 (console) can block startup.
+# You can disable the TCP console with:
+#   --serial0 udpclient:127.0.0.1:14560
+#
 # Terminal D (camera topics):
 # /path/to/NSDron/sim/check_camera_topics.sh
 CMD

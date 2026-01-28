@@ -12,6 +12,7 @@ SITL_SIM_PORT_IN="${SITL_SIM_PORT_IN:-9003}"
 SITL_SIM_PORT_OUT="${SITL_SIM_PORT_OUT:-9002}"
 MAVLINK_TCP_PORT="${MAVLINK_TCP_PORT:-5762}"
 SERIAL1_URL="${SERIAL1_URL:-tcp:0.0.0.0:${MAVLINK_TCP_PORT}}"
+SERIAL0_URL="${SERIAL0_URL:-udpclient:127.0.0.1:14560}"
 
 mkdir -p "$LOG_DIR"
 
@@ -46,6 +47,7 @@ fi
   --slave 0 \
   --defaults "$DEFAULTS" \
   --sim-address=127.0.0.1 --sim-port-in "$SITL_SIM_PORT_IN" --sim-port-out "$SITL_SIM_PORT_OUT" \
+  --serial0 "$SERIAL0_URL" \
   --serial1 "$SERIAL1_URL" \
   -I0 >"$SITL_LOG" 2>&1 &
 
