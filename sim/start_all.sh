@@ -42,7 +42,7 @@ if [[ -f "$MODEL_SDF" ]]; then
 fi
 
 "$ARDUPILOT_DIR/build/sitl/bin/arducopter" \
-  --model gazebo-iris \
+  --model JSON \
   --speedup 1 \
   --slave 0 \
   --defaults "$DEFAULTS" \
