@@ -27,6 +27,12 @@ run with:
 SERIAL0_URL=tcp:0.0.0.0:5760 ./sim/start_visual.sh
 ```
 
+MAVLink TCP listener is configured as:
+```
+SERIAL1_URL=tcp:5762
+```
+This opens a local TCP server on port 5762 for MAVLink clients.
+
 Stop everything:
 ```
 ./sim/stop_all.sh
