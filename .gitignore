@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Logs & outputs
+logs/
+training/logs/
+*.log
+
+# Datasets / recordings / videos
+**/datasets/
+**/recordings/
+**/videos/
+*.bag
+*.bag.active
+*.bag.db3
+*.mp4
+*.avi
+
+# ROS2 build artifacts (colcon)
+build/
+install/
+log/
+
+# Misc
+.DS_Store
+Thumbs.db
+
+# Binary artifacts
+*.bin
+*.dat
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Editor
+.vscode/
+.idea/
+
+# Local symlinks
+NSDron
